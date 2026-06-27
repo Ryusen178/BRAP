@@ -1,0 +1,430 @@
+{% extends 'assistant/base.html' %}
+
+{% block title %}{{ query }} — BRAP{% endblock %}
+
+{% block nav_center %}
+<form class="navbar-search-form" action="{% url 'results' %}" method="GET">
+  <input
+    type="text"
+    name="q"
+    class="navbar-search-input"
+    value="{{ query }}"
+    placeholder="Cari produk lainnya..."
+  />
+</form>
+{% endblock %}
+
+{% block content %}
+<div class="results-page">
+
+  <h1 class="results-headline">{{ headline }}</h1>
+  
+  {% if products %}
+    <div class="results-info">
+      <p class="info-text">Menampilkan <strong>{{ products|length }}</strong> dari <strong>{{ total_products }}</strong> produk (Halaman {{ current_page }} dari {{ total_pages }})</p>
+    </div>
+  {% endif %}
+
+  {% if products %}
+  <div class="products-grid" id="productsGrid">
+    {% for product in products %}
+    <div class="product-card-wrapper">
+      <button 
+        class="btn-wishlist" 
+        data-product-name="{{ product.title }}"
+        data-product-url="{{ product.link }}"
+        data-product-image="{{ product.image }}"
+        data-product-price="{{ product.price_display }}"
+        data-product-store="{{ product.marketplace }}"
+        data-product-rating="{{ product.rating }}"
+        title="Tambahkan ke Wishlist"
+        onclick="addToWishlist(event)"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+      </button>
+
+      <a
+        href="{% url 'product_detail' %}?q={{ query|urlencode }}&idx={{ forloop.counter0|add:start_idx }}&page={{ current_page }}"
+        class="product-card"
+        style="animation-delay: {{ forloop.counter0 }}00ms; text-decoration: none;"
+      >
+        <div class="product-image-wrap">
+          {% if product.image %}
+            <img
+              src="{{ product.image }}"
+              alt="{{ product.title }}"
+              loading="lazy"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+            >
+            <div class="product-image-placeholder" style="display:none">🛍️</div>
+          {% else %}
+            <div class="product-image-placeholder">🛍️</div>
+          {% endif %}
+          <div class="product-rank">#{{ forloop.counter|add:start_idx }}</div>
+        </div>
+
+        <div class="product-body">
+          <p class="product-brand">{{ product.brand }}</p>
+          <h2 class="product-title">{{ product.title }}</h2>
+          <p class="product-price">{{ product.price_display }}</p>
+
+          <div class="product-rating">
+            <span class="star">★</span>
+            <span class="rating-val">{{ product.rating }}</span>
+            <span class="rating-count">({{ product.reviews|default:"–" }} ulasan)</span>
+          </div>
+
+          {% if product.insight %}
+          <div class="brap-insight">
+            <span class="insight-label">BRAP Insight:</span>
+            <span class="insight-text">{{ product.insight }}</span>
+          </div>
+          {% endif %}
+
+          {% if product.marketplace_list %}
+          <div class="marketplaces">
+            <span class="mp-label">Tersedia di:</span>
+            {% for mp in product.marketplace_list %}
+              <span class="mp-badge">{{ mp }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="btn-detail">
+            Lihat Detail
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination Controls -->
+  {% if total_pages > 1 %}
+  <div class="pagination-container">
+    <div class="pagination">
+      {% if has_previous %}
+        <a href="{% url 'results' %}?q={{ query|urlencode }}&page=1" class="pagination-link" title="Halaman pertama">
+          <span>«</span>
+        </a>
+        <a href="{% url 'results' %}?q={{ query|urlencode }}&page={{ previous_page_number }}" class="pagination-link" title="Halaman sebelumnya">
+          <span>‹</span>
+        </a>
+      {% else %}
+        <span class="pagination-link disabled"><span>«</span></span>
+        <span class="pagination-link disabled"><span>‹</span></span>
+      {% endif %}
+
+      {% for page_num in page_range %}
+        {% if page_num == current_page %}
+          <span class="pagination-link active">{{ page_num }}</span>
+        {% else %}
+          <a href="{% url 'results' %}?q={{ query|urlencode }}&page={{ page_num }}" class="pagination-link">{{ page_num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if has_next %}
+        <a href="{% url 'results' %}?q={{ query|urlencode }}&page={{ next_page_number }}" class="pagination-link" title="Halaman berikutnya">
+          <span>›</span>
+        </a>
+        <a href="{% url 'results' %}?q={{ query|urlencode }}&page={{ total_pages }}" class="pagination-link" title="Halaman terakhir">
+          <span>»</span>
+        </a>
+      {% else %}
+        <span class="pagination-link disabled"><span>›</span></span>
+        <span class="pagination-link disabled"><span>»</span></span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="results-footer">
+    <p>Tidak puas? Coba perjelas pencarianmu!</p>
+    <a href="{% url 'home' %}" class="btn-retry">← Cari Lagi</a>
+  </div>
+
+  {% else %}
+  <div class="no-results">
+    <div class="no-results-icon">🔍</div>
+    <h2>Produk tidak ditemukan</h2>
+    <p>Coba gunakan kata kunci yang berbeda atau perluas budget kamu.</p>
+    <a href="{% url 'home' %}" class="btn-retry">← Coba Lagi</a>
+  </div>
+  {% endif %}
+
+</div>
+
+<style>
+.results-info {
+  padding: 1rem 0;
+  margin: 1rem 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.product-card-wrapper {
+  position: relative;
+}
+
+.btn-wishlist {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #ddd;
+  color: #999;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-wishlist:hover {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+  transform: scale(1.1);
+}
+
+.btn-wishlist.active {
+  background: #ff6b6b;
+  color: white;
+  border-color: #ff6b6b;
+  fill: white;
+}
+
+.btn-wishlist svg {
+  transition: all 0.3s ease;
+}
+
+.btn-wishlist.active svg {
+  fill: white;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+  padding: 1rem 0;
+}
+
+.pagination {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pagination-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.pagination-link:hover:not(.disabled):not(.active) {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+  background-color: #fff5f5;
+}
+
+.pagination-link.active {
+  background-color: #ff6b6b;
+  color: white;
+  border-color: #ff6b6b;
+}
+
+.pagination-link.disabled {
+  color: #ccc;
+  cursor: not-allowed;
+  background-color: #f5f5f5;
+}
+
+@media (max-width: 768px) {
+  .pagination-link {
+    width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+  }
+}
+</style>
+
+<script>
+// Function to get CSRF token from cookie
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+function addToWishlist(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  
+  const btn = event.currentTarget;
+  const productName = btn.dataset.productName;
+  const productUrl = btn.dataset.productUrl;
+  const productImage = btn.dataset.productImage;
+  const productPrice = btn.dataset.productPrice;
+  const productStore = btn.dataset.productStore;
+  const productRating = btn.dataset.productRating;
+  
+  // Check if user is authenticated
+  if (!document.querySelector('[data-user-authenticated]')) {
+    alert('Silakan login terlebih dahulu untuk menambahkan ke wishlist.');
+    window.location.href = "{% url 'account_login' %}";
+    return;
+  }
+
+  // Show loading state
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+
+  // Send to API
+  fetch('{% url "add_to_wishlist" %}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken')
+    },
+    body: JSON.stringify({
+      product_name: productName,
+      product_url: productUrl,
+      product_image: productImage,
+      product_price: productPrice,
+      product_store: productStore,
+      product_rating: productRating,
+      product_data: {}
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      // Toggle active state
+      btn.classList.toggle('active');
+      btn.style.opacity = '1';
+      btn.disabled = false;
+      
+      // Show notification
+      const message = btn.classList.contains('active') 
+        ? `✓ ${productName} ditambahkan ke wishlist!`
+        : `✓ ${productName} dihapus dari wishlist!`;
+      
+      showNotification(message, 'success');
+    } else {
+      alert('Error: ' + (data.error || 'Terjadi kesalahan'));
+      btn.style.opacity = '1';
+      btn.disabled = false;
+    }
+  })
+  .catch(err => {
+    console.error('Error:', err);
+    alert('Terjadi kesalahan saat menambahkan ke wishlist');
+    btn.style.opacity = '1';
+    btn.disabled = false;
+  });
+}
+
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: ${type === 'success' ? '#4caf50' : '#2196f3'};
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 10000;
+    animation: slideIn 0.3s ease-out;
+    font-weight: 500;
+  `;
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+// Check wishlist status on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const buttons = document.querySelectorAll('.btn-wishlist');
+  buttons.forEach(btn => {
+    const productName = btn.dataset.productName;
+    
+    // Check if product is in wishlist
+    if (document.querySelector('[data-user-authenticated]')) {
+      fetch(`{% url 'api_wishlist_status' %}?product_name=${encodeURIComponent(productName)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.in_wishlist) {
+            btn.classList.add('active');
+          }
+        })
+        .catch(err => console.error('Error checking wishlist status:', err));
+    }
+  });
+});
+
+// Animation keyframes
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideIn {
+    from {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideOut {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+  }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

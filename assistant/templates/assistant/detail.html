@@ -1,0 +1,333 @@
+{% extends 'assistant/base.html' %}
+
+{% block title %}{{ product.title }} — BRAP{% endblock %}
+
+{% block nav_center %}
+<form class="navbar-search-form" action="{% url 'results' %}" method="GET">
+  <input
+    type="text"
+    name="q"
+    class="navbar-search-input"
+    value="{{ query }}"
+    placeholder="Cari produk lainnya..."
+  />
+</form>
+{% endblock %}
+
+{% block content %}
+<div class="detail-page">
+
+  <a href="{% url 'results' %}?q={{ query|urlencode }}{% if page %}&page={{ page }}{% endif %}" class="btn-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    Kembali ke hasil
+  </a>
+
+  <div class="detail-layout">
+
+    <!-- Gambar Produk -->
+    <div class="detail-image-wrap">
+      {% if product.image %}
+        <img
+          src="{{ product.image }}"
+          alt="{{ product.title }}"
+          class="detail-main-img"
+          onerror="this.style.display='none';document.getElementById('imgFallback').style.display='flex'"
+        >
+        <div id="imgFallback" class="detail-img-placeholder" style="display:none">🛍️</div>
+      {% else %}
+        <div class="detail-img-placeholder">🛍️</div>
+      {% endif %}
+
+      {% if product.insight %}
+      <div class="detail-insight-badge">
+        <span class="insight-dot"></span>
+        <span>{{ product.insight }}</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Info Produk -->
+    <div class="detail-info">
+
+      <p class="detail-brand">{{ product.brand }}</p>
+      <h1 class="detail-title">{{ product.title }}</h1>
+
+      <div class="detail-price-row">
+        <span class="detail-price">{{ product.price_display }}</span>
+      </div>
+
+      <div class="detail-rating-row">
+        <span class="star">★</span>
+        <span class="rating-val">{{ product.rating }}</span>
+        <span class="rating-count">({{ product.reviews|default:"–" }} ulasan)</span>
+      </div>
+
+      {% if product.description %}
+      <div class="detail-desc">
+        <h3 class="detail-section-title">Tentang Produk</h3>
+        <p>{{ product.description }}</p>
+      </div>
+      {% endif %}
+
+      <!-- Insight BRAP -->
+      {% if product.insight %}
+      <div class="detail-brap-insight">
+        <span class="insight-label">💡 BRAP Insight</span>
+        <p class="insight-text">{{ product.insight }}</p>
+      </div>
+      {% endif %}
+
+      <!-- Tersedia di -->
+      {% if product.marketplace_list %}
+      <div class="detail-marketplace-section">
+        <h3 class="detail-section-title">Tersedia di</h3>
+        <div class="detail-mp-list">
+          {% for mp in product.marketplace_list %}
+            <span class="mp-badge">{{ mp }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- CTA -->
+      <a
+        href="{{ product.link }}"
+        class="btn-buy"
+      >
+        Beli Sekarang
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/>
+          <line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+      </a>
+
+      <button
+        class="btn-wishlist-detail"
+        data-product-name="{{ product.title }}"
+        data-product-url="{{ product.link }}"
+        data-product-image="{{ product.image }}"
+        data-product-price="{{ product.price_display }}"
+        data-product-store="{{ product.marketplace }}"
+        data-product-rating="{{ product.rating }}"
+        onclick="addToWishlistDetail(event)"
+        title="Tambahkan ke Wishlist"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+        <span id="wishlistBtnText">Tambahkan ke Wishlist</span>
+      </button>
+
+      <p class="detail-disclaimer">
+        Harga dan ketersediaan dapat berubah sewaktu-waktu di marketplace.
+      </p>
+
+    </div>
+  </div>
+
+</div>
+
+<style>
+.btn-wishlist-detail {
+  width: 100%;
+  padding: 1rem;
+  margin-top: 1rem;
+  background: white;
+  color: #ff6b6b;
+  border: 2px solid #ff6b6b;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.btn-wishlist-detail:hover {
+  background: #ffe0e0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+}
+
+.btn-wishlist-detail.active {
+  background: #ff6b6b;
+  color: white;
+}
+
+.btn-wishlist-detail svg {
+  transition: all 0.3s ease;
+}
+
+.btn-wishlist-detail.active svg {
+  fill: white;
+}
+</style>
+
+<script>
+// Function to get CSRF token from cookie
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+function addToWishlistDetail(event) {
+  event.preventDefault();
+  
+  const btn = event.currentTarget;
+  const productName = btn.dataset.productName;
+  const productUrl = btn.dataset.productUrl;
+  const productImage = btn.dataset.productImage;
+  const productPrice = btn.dataset.productPrice;
+  const productStore = btn.dataset.productStore;
+  const productRating = btn.dataset.productRating;
+  
+  // Check if user is authenticated
+  if (!document.querySelector('[data-user-authenticated]')) {
+    alert('Silakan login terlebih dahulu untuk menambahkan ke wishlist.');
+    window.location.href = "{% url 'account_login' %}";
+    return;
+  }
+
+  // Show loading state
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+
+  // Send to API
+  fetch('{% url "add_to_wishlist" %}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken')
+    },
+    body: JSON.stringify({
+      product_name: productName,
+      product_url: productUrl,
+      product_image: productImage,
+      product_price: productPrice,
+      product_store: productStore,
+      product_rating: productRating,
+      product_data: {}
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      // Toggle active state
+      btn.classList.toggle('active');
+      btn.style.opacity = '1';
+      btn.disabled = false;
+      
+      // Update button text
+      const textSpan = btn.querySelector('#wishlistBtnText');
+      if (btn.classList.contains('active')) {
+        textSpan.textContent = '✓ Sudah di Wishlist';
+      } else {
+        textSpan.textContent = 'Tambahkan ke Wishlist';
+      }
+      
+      // Show notification
+      const message = btn.classList.contains('active') 
+        ? `✓ ${productName} ditambahkan ke wishlist!`
+        : `✓ ${productName} dihapus dari wishlist!`;
+      
+      showNotificationDetail(message, 'success');
+    } else {
+      alert('Error: ' + (data.error || 'Terjadi kesalahan'));
+      btn.style.opacity = '1';
+      btn.disabled = false;
+    }
+  })
+  .catch(err => {
+    console.error('Error:', err);
+    alert('Terjadi kesalahan saat menambahkan ke wishlist');
+    btn.style.opacity = '1';
+    btn.disabled = false;
+  });
+}
+
+function showNotificationDetail(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: ${type === 'success' ? '#4caf50' : '#2196f3'};
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 10000;
+    animation: slideIn 0.3s ease-out;
+    font-weight: 500;
+  `;
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+// Check wishlist status on page load
+document.addEventListener('DOMContentLoaded', function() {
+  if (document.querySelector('[data-user-authenticated]')) {
+    const btn = document.querySelector('.btn-wishlist-detail');
+    const productName = btn.dataset.productName;
+    
+    fetch(`{% url 'api_wishlist_status' %}?product_name=${encodeURIComponent(productName)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.in_wishlist) {
+          btn.classList.add('active');
+          btn.querySelector('#wishlistBtnText').textContent = '✓ Sudah di Wishlist';
+        }
+      })
+      .catch(err => console.error('Error checking wishlist status:', err));
+  }
+});
+
+// Animation keyframes
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideIn {
+    from {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideOut {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+  }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

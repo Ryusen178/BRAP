@@ -1,0 +1,107 @@
+{% extends 'assistant/base.html' %}
+
+{% block content %}
+<div class="home-hero">
+  <div class="hero-glow"></div>
+
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    AI Shopping Assistant · Powered by BRAP
+  </div>
+
+  <h1 class="hero-title">
+    Temukan Produk<br>
+    <span class="highlight">Terbaik untuk Kamu</span><br>
+    dalam Hitungan Detik
+  </h1>
+
+  <p class="hero-subtitle">
+    Ceritakan apa yang kamu cari — BRAP akan menemukan pilihan terbaik dari seluruh marketplace untukmu.
+  </p>
+
+  <form class="search-form" action="{% url 'results' %}" method="GET" id="searchForm">
+    <div class="search-box">
+      <input
+        type="text"
+        name="q"
+        id="searchInput"
+        class="search-input"
+        placeholder="Contoh: 'Sepatu running Nike di bawah 500 ribu'"
+        autocomplete="off"
+      />
+      <div class="search-icons">
+        <button type="button" class="icon-btn" id="voiceBtn" title="Pencarian suara">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </button>
+        <button type="button" class="icon-btn" title="Cari dengan gambar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <button type="submit" class="btn-pick" id="submitBtn">
+      <span class="btn-text">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Cari Sekarang
+      </span>
+      <div class="btn-loader" style="display:none">
+        <div class="spinner"></div>
+        <span>BRAP sedang mencari...</span>
+      </div>
+    </button>
+  </form>
+
+  <div class="suggestion-chips">
+    <span class="chip-label">Coba cari</span>
+    <button class="chip" data-query="Sepatu running Nike di bawah 500 ribu">👟 Sepatu running murah</button>
+    <button class="chip" data-query="Laptop gaming budget 8 jutaan">💻 Laptop gaming budget</button>
+    <button class="chip" data-query="Tas ransel wanita branded murah">👜 Tas wanita branded</button>
+    <button class="chip" data-query="Headphone bluetooth terbaik di bawah 300 ribu">🎧 Headphone murah</button>
+  </div>
+</div>
+
+<div class="help-fab" title="Bantuan">?</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.getElementById('searchInput').value = chip.dataset.query;
+      document.getElementById('searchInput').focus();
+    });
+  });
+
+  const voiceBtn = document.getElementById('voiceBtn');
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SR();
+    recognition.lang = 'id-ID';
+    recognition.onresult = e => {
+      document.getElementById('searchInput').value = e.results[0][0].transcript;
+    };
+    voiceBtn.addEventListener('click', () => recognition.start());
+  } else {
+    voiceBtn.style.opacity = '0.4';
+    voiceBtn.title = 'Browser tidak mendukung voice search';
+  }
+
+  document.getElementById('searchForm').addEventListener('submit', function(e) {
+    const q = document.getElementById('searchInput').value.trim();
+    if (!q) { e.preventDefault(); return; }
+    document.querySelector('.btn-text').style.display = 'none';
+    document.querySelector('.btn-loader').style.display = 'flex';
+    document.getElementById('submitBtn').disabled = true;
+  });
+</script>
+{% endblock %}

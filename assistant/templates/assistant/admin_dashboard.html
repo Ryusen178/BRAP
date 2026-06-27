@@ -1,0 +1,907 @@
+{% extends 'assistant/base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - BRAP{% endblock %}
+
+{% block content %}
+<div class="adm-layout">
+
+  <!-- Sidebar -->
+  <aside class="adm-sidebar">
+    <div class="adm-sidebar-header">
+      <div class="adm-sidebar-brand">
+        <div class="adm-sidebar-icon">B</div>
+        <span class="adm-sidebar-name">BRAP</span>
+      </div>
+    </div>
+    <nav class="adm-nav">
+      <a href="#overview" class="adm-nav-item adm-nav-active">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Overview
+      </a>
+      <a href="#users" class="adm-nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Pengguna
+      </a>
+      <a href="#wishlist" class="adm-nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Wishlist
+      </a>
+      <a href="#searches" class="adm-nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Pencarian
+      </a>
+    </nav>
+    <div class="adm-sidebar-footer">
+      <a href="{% url 'home' %}" class="adm-nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Kembali ke App
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="adm-main">
+
+    <!-- Top bar -->
+    <div class="adm-topbar">
+      <div class="adm-topbar-left">
+        <h1 class="adm-page-title">Admin Dashboard</h1>
+        <p class="adm-page-sub">Pantau aktivitas dan statistik platform BRAP</p>
+      </div>
+      <div class="adm-topbar-right">
+        <div class="adm-badge-time">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Real-time
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div id="overview" class="adm-stats-grid">
+      <div class="adm-stat-card adm-stat-blue">
+        <div class="adm-stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="adm-stat-body">
+          <p class="adm-stat-label">Kunjungan Hari Ini</p>
+          <p class="adm-stat-value">{{ today_visits }}</p>
+          <p class="adm-stat-desc">Page visits</p>
+        </div>
+      </div>
+
+      <div class="adm-stat-card adm-stat-purple">
+        <div class="adm-stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="adm-stat-body">
+          <p class="adm-stat-label">7 Hari Terakhir</p>
+          <p class="adm-stat-value">{{ visits_7days_count }}</p>
+          <p class="adm-stat-desc">Total kunjungan</p>
+        </div>
+      </div>
+
+      <div class="adm-stat-card adm-stat-green">
+        <div class="adm-stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="adm-stat-body">
+          <p class="adm-stat-label">Total Pengguna</p>
+          <p class="adm-stat-value">{{ total_users }}</p>
+          <p class="adm-stat-desc">User terdaftar</p>
+        </div>
+      </div>
+
+      <div class="adm-stat-card adm-stat-orange">
+        <div class="adm-stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="adm-stat-body">
+          <p class="adm-stat-label">Pengguna Aktif</p>
+          <p class="adm-stat-value">{{ active_users }}</p>
+          <p class="adm-stat-desc">Akun aktif</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two-column: Wishlist + Searches -->
+    <div class="adm-two-col">
+
+      <!-- Top Wishlisted Products -->
+      <div class="adm-card">
+        <div class="adm-card-header">
+          <div class="adm-card-title-group">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <h2 class="adm-card-title">Produk Terpopuler di Wishlist</h2>
+          </div>
+          <span class="adm-count-badge">Top {{ top_wishlisted|length }}</span>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Produk</th>
+                <th>Toko</th>
+                <th>Jumlah</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in top_wishlisted %}
+              <tr>
+                <td class="adm-rank">{{ forloop.counter }}</td>
+                <td class="adm-product-name">{{ item.product_name|truncatewords:8 }}</td>
+                <td><span class="adm-store-tag">{{ item.product_store|default:"—" }}</span></td>
+                <td>
+                  <span class="adm-chip adm-chip-blue">{{ item.count }}</span>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" class="adm-empty">Belum ada data</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Top Searches -->
+      <div id="searches" class="adm-card">
+        <div class="adm-card-header">
+          <div class="adm-card-title-group">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <h2 class="adm-card-title">Pencarian Terpopuler</h2>
+          </div>
+          <span class="adm-count-badge">Top {{ top_searches|length }}</span>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Kata Kunci</th>
+                <th>Jumlah</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in top_searches %}
+              <tr>
+                <td class="adm-rank">{{ forloop.counter }}</td>
+                <td>{{ item.query|truncatewords:8 }}</td>
+                <td><span class="adm-chip adm-chip-purple">{{ item.count }}</span></td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3" class="adm-empty">Belum ada data pencarian</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Wishlist per User -->
+    {% if user_wishlist_details %}
+    <div id="wishlist" class="adm-card adm-card-full">
+      <div class="adm-card-header">
+        <div class="adm-card-title-group">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <h2 class="adm-card-title">Wishlist per Pengguna</h2>
+        </div>
+      </div>
+      <div class="adm-wishlist-grid">
+        {% for username, items in user_wishlist_details.items %}
+        <div class="adm-user-card">
+          <div class="adm-user-card-head">
+            <div class="adm-avatar">{{ username|first|upper }}</div>
+            <div>
+              <p class="adm-username">{{ username }}</p>
+              <p class="adm-user-meta">{{ items|length }} produk</p>
+            </div>
+          </div>
+          <div class="adm-wishlist-items">
+            {% for item in items %}
+            <div class="adm-wish-row">
+              <p class="adm-wish-name">{{ item.product_name }}</p>
+              <div class="adm-wish-meta">
+                <span class="adm-store-tag">{{ item.product_store|default:"—" }}</span>
+                {% if item.product_price %}
+                <span class="adm-price">{{ item.product_price }}</span>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- User List -->
+    <div id="users" class="adm-card adm-card-full">
+      <div class="adm-card-header">
+        <div class="adm-card-title-group">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <h2 class="adm-card-title">Daftar Pengguna</h2>
+        </div>
+        <span class="adm-count-badge">{{ total_users }} user</span>
+      </div>
+
+      <!-- Filters -->
+      <div class="adm-filter-bar">
+        <div class="adm-search-wrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="userSearch" placeholder="Cari username atau email..." class="adm-filter-input" oninput="filterUsers()">
+        </div>
+        <select id="userRole" class="adm-filter-select" onchange="filterUsers()">
+          <option value="all">Semua Role</option>
+          <option value="superuser">Superuser</option>
+          <option value="staff">Staff</option>
+          <option value="regular">Regular</option>
+        </select>
+        <select id="userStatus" class="adm-filter-select" onchange="filterUsers()">
+          <option value="all">Semua Status</option>
+          <option value="active">Aktif</option>
+          <option value="inactive">Non-aktif</option>
+        </select>
+      </div>
+
+      <div class="adm-table-wrap">
+        <table class="adm-table adm-user-table" id="userTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Pengguna</th>
+              <th>Email</th>
+              <th>Nama Lengkap</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Tgl Daftar</th>
+              <th>Login Terakhir</th>
+              <th>Pencarian</th>
+              <th>Wishlist</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            {% for u in user_list %}
+            <tr class="user-row"
+                data-username="{{ u.username|lower }}"
+                data-email="{{ u.email|lower }}"
+                data-role="{% if u.is_superuser %}superuser{% elif u.is_staff %}staff{% else %}regular{% endif %}"
+                data-status="{% if u.is_active %}active{% else %}inactive{% endif %}">
+              <td class="adm-rank">{{ forloop.counter }}</td>
+              <td>
+                <div class="adm-user-identity">
+                  <div class="adm-avatar adm-avatar-sm">{{ u.username|first|upper }}</div>
+                  <span class="adm-uname">{{ u.username }}</span>
+                </div>
+              </td>
+              <td class="adm-muted">{{ u.email|default:"—" }}</td>
+              <td>{{ u.full_name }}</td>
+              <td>
+                {% if u.is_superuser %}
+                  <span class="adm-role adm-role-super">Superuser</span>
+                {% elif u.is_staff %}
+                  <span class="adm-role adm-role-staff">Staff</span>
+                {% else %}
+                  <span class="adm-role adm-role-regular">Regular</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if u.is_active %}
+                  <span class="adm-status adm-status-on">Aktif</span>
+                {% else %}
+                  <span class="adm-status adm-status-off">Non-aktif</span>
+                {% endif %}
+              </td>
+              <td class="adm-muted adm-date-cell">
+                {{ u.date_joined|date:"d M Y" }}<br>
+                <span class="adm-time">{{ u.date_joined|date:"H:i" }}</span>
+              </td>
+              <td class="adm-muted adm-date-cell">
+                {% if u.last_login %}
+                  {{ u.last_login|date:"d M Y" }}<br>
+                  <span class="adm-time">{{ u.last_login|date:"H:i" }}</span>
+                {% else %}
+                  <span class="adm-never">—</span>
+                {% endif %}
+              </td>
+              <td class="adm-center">
+                <span class="adm-chip {% if u.search_count > 0 %}adm-chip-purple{% endif %}">{{ u.search_count }}</span>
+              </td>
+              <td class="adm-center">
+                <span class="adm-chip {% if u.wishlist_count > 0 %}adm-chip-blue{% endif %}">{{ u.wishlist_count }}</span>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="10" class="adm-empty">Belum ada user terdaftar</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="adm-filter-note" id="filterNote" style="display:none;">
+        Menampilkan <strong id="filteredCount">0</strong> dari {{ total_users }} pengguna
+      </p>
+    </div>
+
+  </div><!-- /.adm-main -->
+</div><!-- /.adm-layout -->
+
+<style>
+/* ──────────────────────────────────────────
+   ADMIN DASHBOARD — Professional Layout
+   ────────────────────────────────────────── */
+
+/* Reset nav for admin page */
+.adm-layout .navbar { display: none; }
+
+.adm-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #0D0E17;
+  color: #E2E6F3;
+  font-family: var(--font-body);
+}
+
+/* ── Sidebar ── */
+.adm-sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: #0A0B14;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+}
+
+.adm-sidebar-header {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.adm-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adm-sidebar-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6C63FF, #9B5DE5);
+  color: #fff;
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(108,99,255,0.4);
+}
+
+.adm-sidebar-name {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 18px;
+  background: linear-gradient(90deg, #fff 0%, #C77DFF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.adm-nav {
+  flex: 1;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adm-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: #8A91B0;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.18s ease;
+}
+
+.adm-nav-item:hover {
+  background: rgba(108,99,255,0.1);
+  color: #C4C9E0;
+}
+
+.adm-nav-item.adm-nav-active {
+  background: rgba(108,99,255,0.15);
+  color: #A89CFF;
+}
+
+.adm-nav-item svg { flex-shrink: 0; }
+
+.adm-sidebar-footer {
+  padding: 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ── Main ── */
+.adm-main {
+  margin-left: 240px;
+  flex: 1;
+  padding: 32px;
+  max-width: calc(100% - 240px);
+  overflow-x: hidden;
+}
+
+/* ── Topbar ── */
+.adm-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.adm-page-title {
+  font-family: var(--font-head);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #F0F2FF;
+  margin-bottom: 4px;
+}
+
+.adm-page-sub {
+  color: #8A91B0;
+  font-size: 0.9rem;
+}
+
+.adm-badge-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 229, 255, 0.08);
+  color: #00E5FF;
+  border: 1px solid rgba(0,229,255,0.2);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* ── Stat Cards ── */
+.adm-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.adm-stat-card {
+  background: #13152A;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.18s, border-color 0.18s;
+}
+.adm-stat-card:hover { transform: translateY(-2px); }
+
+.adm-stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.adm-stat-blue .adm-stat-icon { background: rgba(108,99,255,0.15); color: #A89CFF; }
+.adm-stat-purple .adm-stat-icon { background: rgba(155,93,229,0.15); color: #C77DFF; }
+.adm-stat-green .adm-stat-icon { background: rgba(0,212,170,0.12); color: #00D4AA; }
+.adm-stat-orange .adm-stat-icon { background: rgba(255,160,50,0.12); color: #FFA032; }
+
+.adm-stat-blue:hover { border-color: rgba(108,99,255,0.4); }
+.adm-stat-purple:hover { border-color: rgba(155,93,229,0.4); }
+.adm-stat-green:hover { border-color: rgba(0,212,170,0.3); }
+.adm-stat-orange:hover { border-color: rgba(255,160,50,0.3); }
+
+.adm-stat-label {
+  font-size: 0.8rem;
+  color: #8A91B0;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.adm-stat-value {
+  font-size: 1.9rem;
+  font-weight: 800;
+  font-family: var(--font-head);
+  color: #F0F2FF;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.adm-stat-desc {
+  font-size: 0.75rem;
+  color: #5C637A;
+}
+
+/* ── Cards ── */
+.adm-card {
+  background: #13152A;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.adm-card-full { width: 100%; }
+
+.adm-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.adm-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.adm-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #8A91B0;
+}
+
+.adm-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #E2E6F3;
+  font-family: var(--font-head);
+  margin: 0;
+}
+
+.adm-count-badge {
+  background: rgba(108,99,255,0.12);
+  color: #A89CFF;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* ── Table ── */
+.adm-table-wrap { overflow-x: auto; }
+
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.adm-table thead tr {
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.adm-table th {
+  text-align: left;
+  padding: 12px 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #5C637A;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.adm-table td {
+  padding: 13px 20px;
+  font-size: 0.88rem;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  white-space: nowrap;
+}
+
+.adm-table tbody tr:last-child td { border-bottom: none; }
+.adm-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+.adm-rank { color: #5C637A; font-weight: 600; font-size: 0.82rem; }
+.adm-muted { color: #8A91B0; }
+.adm-center { text-align: center; }
+.adm-product-name { color: #E2E6F3; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+
+.adm-date-cell { font-size: 0.82rem; line-height: 1.4; }
+.adm-time { color: #5C637A; font-size: 0.75rem; }
+.adm-never { color: #5C637A; font-style: italic; }
+
+.adm-empty {
+  text-align: center;
+  color: #5C637A;
+  padding: 32px !important;
+  font-size: 0.88rem;
+  font-style: italic;
+}
+
+/* Store tag */
+.adm-store-tag {
+  background: rgba(0,229,255,0.08);
+  color: #00E5FF;
+  border: 1px solid rgba(0,229,255,0.15);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+/* Chips */
+.adm-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: rgba(255,255,255,0.05);
+  color: #5C637A;
+}
+
+.adm-chip-blue { background: rgba(108,99,255,0.15); color: #A89CFF; }
+.adm-chip-purple { background: rgba(155,93,229,0.15); color: #C77DFF; }
+
+/* Role badges */
+.adm-role {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.adm-role-super { background: rgba(255,107,138,0.12); color: #FF6B8A; }
+.adm-role-staff  { background: rgba(255,160,50,0.12);  color: #FFA032; }
+.adm-role-regular { background: rgba(108,99,255,0.12); color: #A89CFF; }
+
+/* Status */
+.adm-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.adm-status::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
+.adm-status-on { color: #00D4AA; }
+.adm-status-on::before { background: #00D4AA; box-shadow: 0 0 6px #00D4AA; }
+.adm-status-off { color: #5C637A; }
+.adm-status-off::before { background: #5C637A; }
+
+/* User identity */
+.adm-user-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adm-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6C63FF, #9B5DE5);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.adm-avatar-sm {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.adm-uname {
+  font-weight: 600;
+  color: #E2E6F3;
+}
+
+/* ── Wishlist per User ── */
+.adm-wishlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  padding: 20px;
+}
+
+.adm-user-card {
+  background: #0D0E17;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.adm-user-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.adm-username {
+  font-weight: 700;
+  color: #A89CFF;
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+
+.adm-user-meta { color: #5C637A; font-size: 0.78rem; }
+
+.adm-wishlist-items { display: flex; flex-direction: column; gap: 8px; }
+
+.adm-wish-row {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-left: 3px solid rgba(108,99,255,0.5);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.adm-wish-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #E2E6F3;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.adm-wish-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.adm-price { color: #00D4AA; font-weight: 600; font-size: 0.82rem; }
+
+/* ── Filter bar ── */
+.adm-filter-bar {
+  display: flex;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-wrap: wrap;
+}
+
+.adm-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: #5C637A;
+}
+
+.adm-filter-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #E2E6F3;
+  font-size: 0.88rem;
+  padding: 9px 0;
+  font-family: var(--font-body);
+}
+
+.adm-filter-input::placeholder { color: #5C637A; }
+
+.adm-filter-select {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 9px 14px;
+  color: #E2E6F3;
+  font-size: 0.88rem;
+  outline: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: border-color 0.18s;
+}
+
+.adm-filter-select:focus { border-color: rgba(108,99,255,0.5); }
+
+.adm-filter-note {
+  padding: 12px 20px;
+  font-size: 0.82rem;
+  color: #5C637A;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+/* ── Card margin ── */
+.adm-card-full + .adm-card-full { margin-top: 16px; }
+.adm-two-col + .adm-card-full { margin-top: 0; }
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+  .adm-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .adm-two-col { grid-template-columns: 1fr; }
+  .adm-sidebar { width: 64px; min-width: 64px; }
+  .adm-sidebar .adm-nav-item span,
+  .adm-sidebar-header .adm-sidebar-logo { display: none; }
+  .adm-main { margin-left: 64px; max-width: calc(100% - 64px); }
+  .adm-nav-item { justify-content: center; padding: 12px; }
+}
+
+@media (max-width: 640px) {
+  .adm-stats-grid { grid-template-columns: 1fr; }
+  .adm-main { padding: 16px; }
+}
+</style>
+
+<script>
+function filterUsers() {
+  const search = document.getElementById('userSearch').value.toLowerCase();
+  const role   = document.getElementById('userRole').value;
+  const status = document.getElementById('userStatus').value;
+  const rows   = document.querySelectorAll('#userTableBody .user-row');
+  let visible  = 0;
+
+  rows.forEach(row => {
+    const username  = row.dataset.username || '';
+    const email     = row.dataset.email    || '';
+    const rowRole   = row.dataset.role;
+    const rowStatus = row.dataset.status;
+
+    const matchSearch = !search || username.includes(search) || email.includes(search);
+    const matchRole   = role === 'all'   || rowRole   === role;
+    const matchStatus = status === 'all' || rowStatus === status;
+
+    row.style.display = (matchSearch && matchRole && matchStatus) ? '' : 'none';
+    if (matchSearch && matchRole && matchStatus) visible++;
+  });
+
+  const note = document.getElementById('filterNote');
+  if (search || role !== 'all' || status !== 'all') {
+    note.style.display = 'block';
+    document.getElementById('filteredCount').textContent = visible;
+  } else {
+    note.style.display = 'none';
+  }
+}
+
+// Smooth scroll for sidebar nav
+document.querySelectorAll('.adm-nav-item[href^="#"]').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('.adm-nav-item').forEach(i => i.classList.remove('adm-nav-active'));
+    link.classList.add('adm-nav-active');
+    const target = document.querySelector(link.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+{% endblock %}

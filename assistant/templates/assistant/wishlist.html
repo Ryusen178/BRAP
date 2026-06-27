@@ -1,0 +1,690 @@
+{% extends 'assistant/base.html' %}
+{% load static %}
+
+{% block title %}Wishlist Saya — BRAP{% endblock %}
+
+{% block content %}
+<div class="wl-page">
+
+  <!-- Page Header -->
+  <div class="wl-header">
+    <div class="wl-header-left">
+      <a href="{% url 'home' %}" class="wl-back" onclick="if(window.history.length>1){event.preventDefault();window.history.back();}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Kembali
+      </a>
+      <div class="wl-title-group">
+        <div class="wl-title-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <div>
+          <h1 class="wl-title">Wishlist Saya</h1>
+          <p class="wl-subtitle">
+            {% if total_items > 0 %}{{ total_items }} produk tersimpan{% else %}Belum ada produk{% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+    {% if wishlist_items %}
+    <div class="wl-header-right">
+      <div class="wl-sort-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        <select class="wl-sort" id="wlSort" onchange="sortWishlist(this.value)">
+          <option value="newest">Terbaru</option>
+          <option value="oldest">Terlama</option>
+          <option value="name">Nama A–Z</option>
+        </select>
+      </div>
+      <div class="wl-view-toggle">
+        <button class="wl-view-btn active" id="btnGrid" onclick="setView('grid')" title="Grid">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </button>
+        <button class="wl-view-btn" id="btnList" onclick="setView('list')" title="List">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if messages %}
+  <div class="wl-alerts">
+    {% for message in messages %}
+    <div class="wl-alert wl-alert-{{ message.tags }}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      {{ message }}
+      <button onclick="this.parentElement.remove()" class="wl-alert-close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if wishlist_items %}
+  <div class="wl-grid" id="wishlistGrid">
+    {% for item in wishlist_items %}
+    <div class="wl-card" data-id="{{ item.id }}" data-name="{{ item.product_name }}" data-date="{{ item.added_at|date:'U' }}">
+
+      <!-- Image -->
+      <a href="{{ item.product_url }}" target="_blank" class="wl-card-img-wrap">
+        {% if item.product_image %}
+          <img src="{{ item.product_image }}" alt="{{ item.product_name }}" class="wl-card-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="wl-card-img-fallback" style="display:none">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+        {% else %}
+          <div class="wl-card-img-fallback">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+        {% endif %}
+        {% if item.product_store %}
+        <span class="wl-store-chip">{{ item.product_store }}</span>
+        {% endif %}
+      </a>
+
+      <!-- Content -->
+      <div class="wl-card-body">
+        <a href="{{ item.product_url }}" target="_blank" class="wl-card-name">{{ item.product_name }}</a>
+
+        <div class="wl-card-meta">
+          {% if item.product_rating %}
+          <span class="wl-rating">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#FBBF24" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            {{ item.product_rating }}
+          </span>
+          {% endif %}
+        </div>
+
+        {% if item.product_price %}
+        <p class="wl-card-price">{{ item.product_price }}</p>
+        {% endif %}
+
+        <p class="wl-card-date">Ditambahkan {{ item.added_at|date:"d M Y" }}</p>
+      </div>
+
+      <!-- Actions -->
+      <div class="wl-card-actions">
+        {% if item.product_url %}
+        <a href="{{ item.product_url }}" target="_blank" class="wl-btn wl-btn-visit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Lihat Produk
+        </a>
+        {% endif %}
+        <button class="wl-btn wl-btn-remove" data-item-id="{{ item.id }}" data-name="{{ item.product_name|escapejs }}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Hapus
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <!-- Empty State -->
+  <div class="wl-empty">
+    <div class="wl-empty-art">
+      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    </div>
+    <h2 class="wl-empty-title">Wishlist masih kosong</h2>
+    <p class="wl-empty-desc">Temukan produk yang kamu suka dan simpan di sini untuk dibeli nanti.</p>
+    <a href="{% url 'home' %}" class="wl-cta">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Mulai Cari Produk
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Delete Modal -->
+<div id="wlModal" class="wl-modal">
+  <div class="wl-modal-box">
+    <div class="wl-modal-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    </div>
+    <h3 class="wl-modal-title">Hapus dari Wishlist?</h3>
+    <p class="wl-modal-desc" id="wlModalDesc">Produk ini akan dihapus dari wishlist kamu.</p>
+    <div class="wl-modal-actions">
+      <button class="wl-modal-cancel" onclick="closeWlModal()">Batal</button>
+      <button class="wl-modal-confirm" id="wlModalConfirm">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ── Wishlist Page ─────────────────────────── */
+.wl-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* Header */
+.wl-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.wl-header-left { display: flex; flex-direction: column; gap: 1rem; }
+
+.wl-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+  transition: all 0.18s;
+  width: fit-content;
+}
+.wl-back:hover { color: var(--text); background: var(--surface-3); }
+
+.wl-title-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.wl-title-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255,107,138,0.2), rgba(255,107,138,0.05));
+  border: 1px solid rgba(255,107,138,0.25);
+  color: #FF6B8A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wl-title {
+  font-family: var(--font-head);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+}
+
+.wl-subtitle { color: var(--text-2); font-size: 0.9rem; margin: 4px 0 0; }
+
+.wl-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wl-sort-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  padding: 0 12px;
+  color: var(--text-2);
+}
+
+.wl-sort {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-family: var(--font-body);
+  padding: 9px 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+.wl-view-toggle {
+  display: flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.wl-view-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-2);
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+}
+.wl-view-btn.active, .wl-view-btn:hover { background: var(--surface-3); color: var(--accent); }
+
+/* Alerts */
+.wl-alerts { margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 8px; }
+
+.wl-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.wl-alert-success {
+  background: rgba(0,212,170,0.1);
+  color: #00D4AA;
+  border: 1px solid rgba(0,212,170,0.2);
+}
+
+.wl-alert-error {
+  background: rgba(255,107,138,0.1);
+  color: #FF6B8A;
+  border: 1px solid rgba(255,107,138,0.2);
+}
+
+.wl-alert-close {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  margin-left: auto;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+}
+.wl-alert-close:hover { opacity: 1; }
+
+/* Grid */
+.wl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.wl-grid.list-view {
+  grid-template-columns: 1fr;
+}
+
+.wl-grid.list-view .wl-card {
+  flex-direction: row;
+}
+
+.wl-grid.list-view .wl-card-img-wrap {
+  width: 140px;
+  min-width: 140px;
+  height: 120px;
+  border-radius: 12px 0 0 12px;
+}
+
+.wl-grid.list-view .wl-card-body { padding: 16px; flex: 1; }
+.wl-grid.list-view .wl-card-actions { flex-direction: column; width: 140px; padding: 16px; border-top: none; border-left: 1px solid rgba(255,255,255,0.06); }
+
+/* Card */
+.wl-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.wl-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255,107,138,0.35);
+  box-shadow: 0 12px 36px rgba(255,107,138,0.1);
+}
+
+/* Image */
+.wl-card-img-wrap {
+  position: relative;
+  display: block;
+  height: 190px;
+  background: var(--surface-3);
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.wl-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+.wl-card:hover .wl-card-img { transform: scale(1.04); }
+
+.wl-card-img-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+}
+
+.wl-store-chip {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(6,8,15,0.75);
+  backdrop-filter: blur(8px);
+  color: var(--accent);
+  border: 1px solid rgba(0,229,255,0.2);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+/* Body */
+.wl-card-body {
+  padding: 14px 16px 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wl-card-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.18s;
+}
+.wl-card-name:hover { color: var(--accent); }
+
+.wl-card-meta { display: flex; align-items: center; gap: 8px; }
+
+.wl-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #FBBF24;
+  font-weight: 600;
+}
+
+.wl-card-price {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #FF6B8A;
+  font-family: var(--font-head);
+  margin-top: auto;
+}
+
+.wl-card-date {
+  font-size: 0.72rem;
+  color: var(--text-3);
+}
+
+/* Actions */
+.wl-card-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.wl-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.18s;
+  border: 1px solid transparent;
+}
+
+.wl-btn-visit {
+  background: rgba(0,229,255,0.08);
+  color: var(--accent);
+  border-color: rgba(0,229,255,0.2);
+}
+.wl-btn-visit:hover { background: rgba(0,229,255,0.15); }
+
+.wl-btn-remove {
+  background: rgba(255,107,138,0.08);
+  color: #FF6B8A;
+  border-color: rgba(255,107,138,0.2);
+}
+.wl-btn-remove:hover { background: rgba(255,107,138,0.15); }
+
+/* Empty */
+.wl-empty {
+  text-align: center;
+  padding: 80px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.wl-empty-art {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255,107,138,0.12), rgba(255,107,138,0.03));
+  border: 1px solid rgba(255,107,138,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,107,138,0.4);
+  margin-bottom: 8px;
+}
+
+.wl-empty-title {
+  font-family: var(--font-head);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.wl-empty-desc { color: var(--text-2); font-size: 0.95rem; max-width: 360px; margin: 0; }
+
+.wl-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  color: #fff;
+  text-decoration: none;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 8px 24px rgba(108,99,255,0.3);
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+.wl-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(108,99,255,0.4); }
+
+/* Modal */
+.wl-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+  animation: wlFadeIn 0.2s ease;
+}
+
+.wl-modal.show { display: flex; }
+
+@keyframes wlFadeIn { from { opacity:0; } to { opacity:1; } }
+
+.wl-modal-box {
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  animation: wlSlideUp 0.25s ease;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+}
+
+@keyframes wlSlideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+.wl-modal-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(255,107,138,0.12);
+  border: 1px solid rgba(255,107,138,0.25);
+  color: #FF6B8A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.wl-modal-title {
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+
+.wl-modal-desc { color: var(--text-2); font-size: 0.9rem; margin: 0 0 24px; line-height: 1.5; }
+
+.wl-modal-actions { display: flex; gap: 10px; }
+
+.wl-modal-cancel, .wl-modal-confirm {
+  flex: 1;
+  padding: 11px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.18s;
+}
+
+.wl-modal-cancel {
+  background: var(--surface-3);
+  color: var(--text-2);
+  border-color: var(--border-2);
+}
+.wl-modal-cancel:hover { color: var(--text); }
+
+.wl-modal-confirm {
+  background: linear-gradient(135deg, #FF6B8A, #ff4d70);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(255,107,138,0.3);
+}
+.wl-modal-confirm:hover { box-shadow: 0 6px 24px rgba(255,107,138,0.4); }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .wl-grid { grid-template-columns: 1fr 1fr; }
+  .wl-header { flex-direction: column; align-items: flex-start; }
+  .wl-title { font-size: 1.4rem; }
+}
+
+@media (max-width: 400px) {
+  .wl-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<script>
+let pendingId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.wl-btn-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingId = btn.dataset.itemId;
+      document.getElementById('wlModalDesc').textContent = `"${btn.dataset.name}" akan dihapus dari wishlist kamu.`;
+      document.getElementById('wlModal').classList.add('show');
+    });
+  });
+
+  document.getElementById('wlModalConfirm').addEventListener('click', () => {
+    if (!pendingId) return;
+    const id = pendingId;
+    closeWlModal();
+
+    fetch(`/api/wishlist/remove/${id}/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const card = document.querySelector(`.wl-card[data-id="${id}"]`);
+        card.style.transition = 'all 0.3s ease';
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+          card.remove();
+          if (!document.querySelector('.wl-card')) location.reload();
+        }, 300);
+      }
+    });
+  });
+
+  document.getElementById('wlModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeWlModal();
+  });
+});
+
+function closeWlModal() {
+  document.getElementById('wlModal').classList.remove('show');
+  pendingId = null;
+}
+
+function setView(mode) {
+  const grid = document.getElementById('wishlistGrid');
+  grid.classList.toggle('list-view', mode === 'list');
+  document.getElementById('btnGrid').classList.toggle('active', mode === 'grid');
+  document.getElementById('btnList').classList.toggle('active', mode === 'list');
+}
+
+function sortWishlist(mode) {
+  const grid = document.getElementById('wishlistGrid');
+  const cards = [...grid.querySelectorAll('.wl-card')];
+  cards.sort((a, b) => {
+    if (mode === 'newest') return b.dataset.date - a.dataset.date;
+    if (mode === 'oldest') return a.dataset.date - b.dataset.date;
+    return a.dataset.name.localeCompare(b.dataset.name);
+  });
+  cards.forEach(c => grid.appendChild(c));
+}
+
+function getCookie(name) {
+  const match = document.cookie.split(';').find(c => c.trim().startsWith(name + '='));
+  return match ? decodeURIComponent(match.split('=')[1]) : '';
+}
+</script>
+{% endblock %}

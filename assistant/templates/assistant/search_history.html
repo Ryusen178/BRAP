@@ -1,0 +1,716 @@
+{% extends 'assistant/base.html' %}
+{% load static %}
+
+{% block title %}Riwayat Pencarian — BRAP{% endblock %}
+
+{% block content %}
+<div class="sh-page">
+
+  <!-- Header -->
+  <div class="sh-header">
+    <div class="sh-header-left">
+      <a href="{% url 'home' %}" class="sh-back" onclick="if(window.history.length>1){event.preventDefault();window.history.back();}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Kembali
+      </a>
+      <div class="sh-title-group">
+        <div class="sh-title-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div>
+          <h1 class="sh-title">Riwayat Pencarian</h1>
+          <p class="sh-subtitle">
+            {% if total_searches > 0 %}{{ total_searches }} pencarian tercatat{% else %}Belum ada riwayat{% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    {% if search_history %}
+    <div class="sh-header-right">
+      <!-- Search filter -->
+      <div class="sh-search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="shFilter" class="sh-filter-input" placeholder="Filter pencarian..." oninput="filterHistory(this.value)">
+      </div>
+      <button class="sh-clear-btn" onclick="openClearModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Hapus Semua
+      </button>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if messages %}
+  <div class="sh-alerts">
+    {% for message in messages %}
+    <div class="sh-alert sh-alert-{{ message.tags }}">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      {{ message }}
+      <button onclick="this.parentElement.remove()" class="sh-alert-close">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if search_history %}
+
+  <!-- Stats bar -->
+  <div class="sh-stats-bar">
+    <div class="sh-stat">
+      <span class="sh-stat-val">{{ total_searches }}</span>
+      <span class="sh-stat-lbl">Total Pencarian</span>
+    </div>
+    <div class="sh-stat-divider"></div>
+    <div class="sh-stat">
+      <span class="sh-stat-val">{{ search_history.0.searched_at|date:"d M Y" }}</span>
+      <span class="sh-stat-lbl">Pencarian Terakhir</span>
+    </div>
+  </div>
+
+  <div class="sh-list" id="shList">
+    {% for item in search_history %}
+    <div class="sh-item" data-id="{{ item.id }}" data-query="{{ item.query|lower }}">
+      <a href="{% url 'results' %}?q={{ item.query|urlencode }}" class="sh-item-link">
+
+        <!-- Icon -->
+        <div class="sh-item-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+
+        <!-- Content -->
+        <div class="sh-item-body">
+          <p class="sh-query">{{ item.query }}</p>
+
+          <div class="sh-tags">
+            {% if item.parsed_params.keywords %}
+              <span class="sh-tag">{{ item.parsed_params.keywords }}</span>
+            {% endif %}
+            {% if item.parsed_params.category %}
+              <span class="sh-tag sh-tag-cat">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                {{ item.parsed_params.category }}
+              </span>
+            {% endif %}
+            {% if item.parsed_params.min_price or item.parsed_params.max_price %}
+              <span class="sh-tag sh-tag-price">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                {% if item.parsed_params.min_price %}Rp{{ item.parsed_params.min_price }}{% endif %}{% if item.parsed_params.min_price and item.parsed_params.max_price %} – {% endif %}{% if item.parsed_params.max_price %}Rp{{ item.parsed_params.max_price }}{% endif %}
+              </span>
+            {% endif %}
+          </div>
+
+          <div class="sh-meta">
+            {% if item.results_count is not None %}
+            <span class="sh-meta-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              {{ item.results_count }} hasil
+            </span>
+            {% endif %}
+            <span class="sh-meta-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              {{ item.searched_at|date:"d M Y, H:i" }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="sh-item-arrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </a>
+
+      <!-- Delete btn -->
+      <button class="sh-delete-btn" data-id="{{ item.id }}" data-query="{{ item.query|escapejs }}" title="Hapus">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+
+  <p class="sh-filter-note" id="shFilterNote" style="display:none">
+    Menampilkan <strong id="shFilterCount">0</strong> hasil untuk "<span id="shFilterTerm"></span>"
+  </p>
+
+  {% else %}
+  <!-- Empty -->
+  <div class="sh-empty">
+    <div class="sh-empty-art">
+      <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <h2 class="sh-empty-title">Belum Ada Riwayat</h2>
+    <p class="sh-empty-desc">Semua pencarian kamu akan tersimpan otomatis di sini.</p>
+    <a href="{% url 'home' %}" class="sh-cta">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Mulai Pencarian
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Delete Single Modal -->
+<div id="shDeleteModal" class="sh-modal">
+  <div class="sh-modal-box">
+    <div class="sh-modal-icon sh-modal-icon-warn">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    </div>
+    <h3 class="sh-modal-title">Hapus Riwayat Ini?</h3>
+    <p class="sh-modal-desc">Pencarian "<strong id="shDeleteQuery"></strong>" akan dihapus secara permanen.</p>
+    <div class="sh-modal-actions">
+      <button class="sh-modal-cancel" onclick="closeDeleteModal()">Batal</button>
+      <button class="sh-modal-confirm" id="shDeleteConfirm">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- Clear All Modal -->
+<div id="shClearModal" class="sh-modal">
+  <div class="sh-modal-box">
+    <div class="sh-modal-icon sh-modal-icon-danger">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <h3 class="sh-modal-title">Hapus Semua Riwayat?</h3>
+    <p class="sh-modal-desc">Seluruh {{ total_searches }} riwayat pencarian akan dihapus dan tidak dapat dipulihkan.</p>
+    <div class="sh-modal-actions">
+      <button class="sh-modal-cancel" onclick="closeClearModal()">Batal</button>
+      <button class="sh-modal-confirm sh-modal-confirm-danger" id="shClearConfirm">Hapus Semua</button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ── Search History Page ─────────────────────── */
+.sh-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* Header */
+.sh-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.sh-header-left { display: flex; flex-direction: column; gap: 1rem; }
+
+.sh-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+  transition: all 0.18s;
+  width: fit-content;
+}
+.sh-back:hover { color: var(--text); background: var(--surface-3); }
+
+.sh-title-group { display: flex; align-items: center; gap: 14px; }
+
+.sh-title-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(108,99,255,0.2), rgba(108,99,255,0.05));
+  border: 1px solid rgba(108,99,255,0.25);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sh-title {
+  font-family: var(--font-head);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+}
+.sh-subtitle { color: var(--text-2); font-size: 0.9rem; margin: 4px 0 0; }
+
+.sh-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sh-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  padding: 0 12px;
+  color: var(--text-2);
+  transition: border-color 0.18s;
+}
+.sh-search-wrap:focus-within { border-color: var(--brand); }
+
+.sh-filter-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-family: var(--font-body);
+  padding: 9px 0;
+  width: 180px;
+}
+.sh-filter-input::placeholder { color: var(--text-3); }
+
+.sh-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  background: rgba(255,107,138,0.08);
+  color: #FF6B8A;
+  border: 1px solid rgba(255,107,138,0.2);
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.sh-clear-btn:hover { background: rgba(255,107,138,0.15); }
+
+/* Alerts */
+.sh-alerts { margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 8px; }
+
+.sh-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.sh-alert-success { background: rgba(0,212,170,0.1); color: #00D4AA; border: 1px solid rgba(0,212,170,0.2); }
+.sh-alert-error { background: rgba(255,107,138,0.1); color: #FF6B8A; border: 1px solid rgba(255,107,138,0.2); }
+.sh-alert-close { background:none; border:none; color:inherit; cursor:pointer; padding:0; margin-left:auto; opacity:0.7; display:flex; align-items:center; }
+.sh-alert-close:hover { opacity:1; }
+
+/* Stats bar */
+.sh-stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 24px;
+  margin-bottom: 20px;
+}
+
+.sh-stat { display: flex; flex-direction: column; gap: 2px; }
+.sh-stat-val { font-family: var(--font-head); font-size: 1.2rem; font-weight: 800; color: var(--text); }
+.sh-stat-lbl { font-size: 0.75rem; color: var(--text-3); }
+.sh-stat-divider { width: 1px; height: 32px; background: var(--border-2); }
+
+/* List */
+.sh-list { display: flex; flex-direction: column; gap: 8px; }
+
+.sh-item {
+  display: flex;
+  align-items: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
+}
+
+.sh-item:hover {
+  border-color: rgba(108,99,255,0.35);
+  box-shadow: 0 4px 20px rgba(108,99,255,0.08);
+  transform: translateX(2px);
+}
+
+.sh-item-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+
+.sh-item-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(108,99,255,0.1);
+  border: 1px solid rgba(108,99,255,0.2);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.18s;
+}
+.sh-item:hover .sh-item-icon { background: rgba(108,99,255,0.18); }
+
+.sh-item-body { flex: 1; min-width: 0; }
+
+.sh-query {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.18s;
+}
+.sh-item:hover .sh-query { color: var(--brand); }
+
+.sh-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.sh-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  background: var(--surface-3);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+
+.sh-tag-cat { background: rgba(0,229,255,0.07); color: var(--accent); border-color: rgba(0,229,255,0.15); }
+.sh-tag-price { background: rgba(251,191,36,0.08); color: #FBBF24; border-color: rgba(251,191,36,0.2); }
+
+.sh-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.sh-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--text-3);
+}
+
+.sh-item-arrow {
+  color: var(--text-3);
+  padding-right: 4px;
+  flex-shrink: 0;
+  transition: color 0.18s, transform 0.18s;
+}
+.sh-item:hover .sh-item-arrow { color: var(--brand); transform: translateX(2px); }
+
+/* Delete btn */
+.sh-delete-btn {
+  background: none;
+  border: none;
+  border-left: 1px solid rgba(255,255,255,0.05);
+  color: var(--text-3);
+  padding: 0 18px;
+  height: 100%;
+  min-height: 70px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s;
+  flex-shrink: 0;
+}
+.sh-delete-btn:hover { background: rgba(255,107,138,0.08); color: #FF6B8A; border-left-color: rgba(255,107,138,0.2); }
+
+/* Filter note */
+.sh-filter-note {
+  margin-top: 16px;
+  font-size: 0.85rem;
+  color: var(--text-2);
+  padding: 10px 16px;
+  background: var(--surface-2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+/* Empty */
+.sh-empty {
+  text-align: center;
+  padding: 80px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.sh-empty-art {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(108,99,255,0.12), rgba(108,99,255,0.03));
+  border: 1px solid rgba(108,99,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(108,99,255,0.4);
+  margin-bottom: 8px;
+}
+
+.sh-empty-title {
+  font-family: var(--font-head);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.sh-empty-desc { color: var(--text-2); font-size: 0.95rem; max-width: 360px; margin: 0; }
+
+.sh-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  color: #fff;
+  text-decoration: none;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 8px 24px rgba(108,99,255,0.3);
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+.sh-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(108,99,255,0.4); }
+
+/* Modal */
+.sh-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+  animation: shFadeIn 0.2s ease;
+}
+.sh-modal.show { display: flex; }
+@keyframes shFadeIn { from { opacity:0; } to { opacity:1; } }
+
+.sh-modal-box {
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  animation: shSlideUp 0.25s ease;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+}
+@keyframes shSlideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+.sh-modal-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+.sh-modal-icon-warn { background: rgba(255,107,138,0.12); border: 1px solid rgba(255,107,138,0.25); color: #FF6B8A; }
+.sh-modal-icon-danger { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25); color: #FBBF24; }
+
+.sh-modal-title {
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+
+.sh-modal-desc { color: var(--text-2); font-size: 0.9rem; margin: 0 0 24px; line-height: 1.5; }
+
+.sh-modal-actions { display: flex; gap: 10px; }
+
+.sh-modal-cancel, .sh-modal-confirm {
+  flex: 1;
+  padding: 11px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.18s;
+}
+
+.sh-modal-cancel {
+  background: var(--surface-3);
+  color: var(--text-2);
+  border-color: var(--border-2);
+}
+.sh-modal-cancel:hover { color: var(--text); }
+
+.sh-modal-confirm {
+  background: linear-gradient(135deg, #FF6B8A, #ff4d70);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(255,107,138,0.3);
+}
+.sh-modal-confirm:hover { box-shadow: 0 6px 24px rgba(255,107,138,0.4); }
+
+.sh-modal-confirm-danger {
+  background: linear-gradient(135deg, #FBBF24, #F59E0B);
+  color: #000;
+  box-shadow: 0 4px 16px rgba(251,191,36,0.3);
+}
+.sh-modal-confirm-danger:hover { box-shadow: 0 6px 24px rgba(251,191,36,0.4); }
+
+/* Hidden items (filter) */
+.sh-item.sh-hidden { display: none; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .sh-header { flex-direction: column; align-items: flex-start; }
+  .sh-title { font-size: 1.4rem; }
+  .sh-filter-input { width: 140px; }
+  .sh-stats-bar { flex-wrap: wrap; }
+}
+</style>
+
+<script>
+let pendingDeleteId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Delete single
+  document.querySelectorAll('.sh-delete-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      pendingDeleteId = btn.dataset.id;
+      document.getElementById('shDeleteQuery').textContent = btn.dataset.query;
+      document.getElementById('shDeleteModal').classList.add('show');
+    });
+  });
+
+  document.getElementById('shDeleteConfirm').addEventListener('click', () => {
+    if (!pendingDeleteId) return;
+    const id = pendingDeleteId;
+    closeDeleteModal();
+
+    const item = document.querySelector(`.sh-item[data-id="${id}"]`);
+    item.style.transition = 'all 0.3s ease';
+    item.style.opacity = '0';
+    item.style.transform = 'translateX(-20px)';
+
+    // POST to Django
+    fetch(`/history/clear/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ history_id: id })
+    }).catch(() => {});
+
+    setTimeout(() => {
+      item.remove();
+      const remaining = document.querySelectorAll('.sh-item').length;
+      if (remaining === 0) location.reload();
+    }, 300);
+  });
+
+  // Clear all
+  document.getElementById('shClearConfirm').addEventListener('click', confirmClearAll);
+
+  // Close modals on backdrop
+  ['shDeleteModal','shClearModal'].forEach(id => {
+    document.getElementById(id).addEventListener('click', e => {
+      if (e.target === e.currentTarget) {
+        document.getElementById(id).classList.remove('show');
+      }
+    });
+  });
+});
+
+function closeDeleteModal() {
+  document.getElementById('shDeleteModal').classList.remove('show');
+  pendingDeleteId = null;
+}
+
+function openClearModal() {
+  document.getElementById('shClearModal').classList.add('show');
+}
+
+function closeClearModal() {
+  document.getElementById('shClearModal').classList.remove('show');
+}
+
+function confirmClearAll() {
+  closeClearModal();
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '{% url "clear_search_history" %}';
+  const csrf = document.createElement('input');
+  csrf.type = 'hidden';
+  csrf.name = 'csrfmiddlewaretoken';
+  csrf.value = getCookie('csrftoken');
+  form.appendChild(csrf);
+  document.body.appendChild(form);
+  form.submit();
+}
+
+function filterHistory(val) {
+  const q = val.toLowerCase().trim();
+  const items = document.querySelectorAll('.sh-item');
+  let count = 0;
+
+  items.forEach(item => {
+    const match = !q || item.dataset.query.includes(q);
+    item.classList.toggle('sh-hidden', !match);
+    if (match) count++;
+  });
+
+  const note = document.getElementById('shFilterNote');
+  if (q) {
+    note.style.display = 'block';
+    document.getElementById('shFilterCount').textContent = count;
+    document.getElementById('shFilterTerm').textContent = val;
+  } else {
+    note.style.display = 'none';
+  }
+}
+
+function getCookie(name) {
+  const match = document.cookie.split(';').find(c => c.trim().startsWith(name + '='));
+  return match ? decodeURIComponent(match.split('=')[1]) : '';
+}
+</script>
+{% endblock %}
